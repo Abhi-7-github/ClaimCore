@@ -229,7 +229,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 ```json
 {
-    "email": "patient@example.com",
+    "email": "patient@gmail.com",
     "password": "Patient@123"
 }
 ```
@@ -238,8 +238,8 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 ```json
 {
-    "email": "insurer@example.com",
-    "password": "insurer@123"
+    "email": "insurer@gmail.com",
+    "password": "Insurer@123"
 }
 ```
 
