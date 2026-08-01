@@ -61,7 +61,8 @@ const PatientDashboard = () => {
 
         <Link
           to="/patient/submit"
-          className="inline-flex items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          className="inline-flex w-fit flex-none items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold whitespace-nowrap shadow-sm hover:opacity-90"
+          style={{ backgroundColor: '#111827', color: '#ffffff', minWidth: '9.5rem' }}
         >
           Submit New Claim
         </Link>

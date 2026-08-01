@@ -25,6 +25,7 @@ const InsurerDashboard = () => {
   const [filters, setFilters] = useState(initialFilters)
   const [claims, setClaims] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [pagination, setPagination] = useState(null)
@@ -141,99 +142,110 @@ const InsurerDashboard = () => {
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-            >
-              <option value="">All</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="minAmount" className="mb-1 block text-sm font-medium text-gray-700">
-              Min Amount
-            </label>
-            <input
-              id="minAmount"
-              name="minAmount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={filters.minAmount}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-              placeholder="0"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="maxAmount" className="mb-1 block text-sm font-medium text-gray-700">
-              Max Amount
-            </label>
-            <input
-              id="maxAmount"
-              name="maxAmount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={filters.maxAmount}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-              placeholder="10000"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="search" className="mb-1 block text-sm font-medium text-gray-700">
-              Search by Name
-            </label>
-            <input
-              id="search"
-              name="search"
-              type="text"
-              value={filters.search}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-              placeholder="Patient name"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {submitting ? 'Applying...' : 'Apply Filters'}
-          </button>
-
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+          <h2 className="text-base font-semibold text-gray-900">Claims</h2>
           <button
             type="button"
-            onClick={handleReset}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            onClick={() => setShowFilters((currentValue) => !currentValue)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-lg font-semibold text-gray-700 hover:bg-gray-50"
+            aria-label={showFilters ? 'Hide filters' : 'Show filters'}
+            aria-expanded={showFilters}
           >
-            Reset
+            {showFilters ? '−' : '+'}
           </button>
         </div>
-      </form>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-gray-900">Claims</h2>
-        </div>
+        {showFilters ? (
+          <form onSubmit={handleSubmit} className="border-b border-gray-200 px-4 py-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label htmlFor="status" className="mb-1 block text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={filters.status}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+                >
+                  <option value="">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="minAmount" className="mb-1 block text-sm font-medium text-gray-700">
+                  Min Amount
+                </label>
+                <input
+                  id="minAmount"
+                  name="minAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={filters.minAmount}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="maxAmount" className="mb-1 block text-sm font-medium text-gray-700">
+                  Max Amount
+                </label>
+                <input
+                  id="maxAmount"
+                  name="maxAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={filters.maxAmount}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+                  placeholder="10000"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="search" className="mb-1 block text-sm font-medium text-gray-700">
+                  Search by Name
+                </label>
+                <input
+                  id="search"
+                  name="search"
+                  type="text"
+                  value={filters.search}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+                  placeholder="Patient name"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {submitting ? 'Applying...' : 'Apply Filters'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleReset}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Reset
+              </button>
+            </div>
+          </form>
+        ) : null}
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-left text-sm">

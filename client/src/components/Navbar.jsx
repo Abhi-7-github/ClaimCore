@@ -16,8 +16,8 @@ const Navbar = () => {
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div>
-          <p className="text-lg font-semibold text-gray-900">Claims Management Platform</p>
-          <p className="text-sm text-gray-500">Minimal claims workflow</p>
+          <p className="text-lg font-semibold text-gray-900">ClaimCore</p>
+          <p className="text-sm text-gray-500">Claims management platform</p>
         </div>
 
         <div className="flex items-center gap-3 text-sm">
