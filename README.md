@@ -1,330 +1,351 @@
-# ClaimCore
+# Claims Management Platform
 
-ClaimCore is a claims management platform with a Node.js and Express backend, MongoDB persistence, JWT-based authentication, role-based access control, and multipart claim document uploads.
+A full-stack **Claims Management Platform** built with **React.js**, **Node.js (Express.js)**, and **MongoDB**. The application provides separate interfaces for **Patients** to submit insurance claims and **Insurers** to review, approve, or reject those claims.
 
-## Overview
+---
 
-The platform supports two roles only:
+## Features
 
-- patient
-- insurer
+### Patient Portal
 
-Patients submit and view their own claims. Insurers review, filter, and update claims.
+- User Registration & Login (JWT Authentication)
+- Submit a New Claim
+- Upload Supporting Documents
+- View Submitted Claims
+- Track Claim Status (Pending, Approved, Rejected)
+- View Approved Amount (if approved)
+- View Insurer Comments
 
-The backend code lives in [backend/](backend), while [server/](server) contains the package entry used to run the API in this workspace layout.
+### Insurer Portal
+
+- Secure Login
+- View All Claims
+- Filter Claims by Status
+- View Uploaded Documents
+- Approve or Reject Claims
+- Add Approved Amount
+- Leave Comments for Patients
+
+---
 
 ## Tech Stack
 
+### Frontend
+
+- React.js
+- React Router DOM
+- Axios
+- Tailwind CSS
+
+### Backend
+
 - Node.js
 - Express.js
-- MongoDB
-- Mongoose
-- JWT
-- bcrypt
-- multer
-- Cloudinary with local upload fallback
-- dotenv
-- express-validator
+- JWT Authentication
+- Multer (File Upload)
+- Cloudinary (Document Storage)
 
-## Folder Structure
+### Database
+
+- MongoDB Atlas
+- Mongoose
+
+---
+
+## Project Structure
 
 ```text
-backend/
-├── app.js
-├── server.js
-├── config/
-├── controllers/
-├── middleware/
-├── models/
-├── routes/
-├── services/
-├── uploads/
-├── utils/
-└── validators/
+ClaimCore/
+│
+├── backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── uploads/
+│   ├── utils/
+│   ├── server.js
+│   └── .env
+│
+├── client/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+└── README.md
 ```
 
-## Installation
+---
 
-1. Install backend dependencies.
+# Installation
+
+## 1. Clone Repository
 
 ```bash
-cd server
+git clone https://github.com/Abhi-7-github/ClaimCore.git
+cd ClaimCore
+```
+
+---
+
+# Backend Setup
+
+Navigate to backend
+
+```bash
+cd backend
+```
+
+Install dependencies
+
+```bash
 npm install
 ```
 
-2. Create your environment file in `backend/.env`.
-
-3. Start MongoDB locally or point `MONGO_URI` to a hosted database.
-
-## Environment Variables
-
-Use the following variables in `backend/.env`:
+Create a `.env` file inside the backend folder.
 
 ```env
+
 PORT=8080
+
+MONGO_URI=your_mongodb_connection_string
 CLIENT_ORIGIN=http://localhost:5173
-MONGO_URI=mongodb://127.0.0.1:27017/claimcore
-JWT_SECRET=replace-with-a-long-random-secret
+
+JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=7d
-PUBLIC_BASE_URL=http://localhost:5000
+
+PUBLIC_BASE_URL=http://localhost:8080
 MAX_FILE_SIZE=10485760
 
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-CLOUDINARY_FOLDER=claimcore-documents
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+CLOUDINARY_FOLDER=ClaimCore
 ```
 
-Notes:
-
-- `CLOUDINARY_*` values are optional.
-- If Cloudinary is not configured, claim documents are stored locally in `backend/uploads/`.
-- `PUBLIC_BASE_URL` is used to build local document URLs.
-- `MAX_FILE_SIZE` is the multer upload limit in bytes.
-
-## Run Commands
-
-From the [server/](server) directory:
-
-```bash
-npm run dev
-```
+Start the backend server
 
 ```bash
 npm start
 ```
 
-Current script behavior:
+Backend runs on
 
-- `npm run dev` starts the backend with `nodemon` watching `backend/`.
-- `npm start` starts the same backend entrypoint through `nodemon` as configured in [server/package.json](server/package.json).
+```
+http://localhost:8080
+```
 
-## Architecture
+---
 
-The backend follows a controller-service pattern:
+# Frontend Setup
 
-- routes define request validation and access control
-- controllers shape HTTP responses
-- services contain business logic and database operations
-- middleware handles auth, role checks, uploads, validation, and errors
+Navigate to client folder
+
+```bash
+cd client
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Create `.env`
+
+```env
+VITE_API_URL=http://localhost:8080/api
+```
+
+Run the frontend
+
+```bash
+npm run dev
+```
+
+Frontend runs on
+
+```
+http://localhost:5173
+```
+
+---
+
+# Authentication
+
+The application uses **JWT (JSON Web Token)** authentication.
+
+### Login
+
+```
+POST /api/auth/login
+```
+
+Response
+
+```json
+{
+    "success": true,
+    "token": "YOUR_JWT_TOKEN"
+}
+```
+
+For all protected APIs, include the following header:
+
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+---
+
+# API Endpoints
 
 ## Authentication
 
-### POST /api/auth/register
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| POST | `/api/auth/register` | Register a new patient |
+| POST | `/api/auth/login` | Login user |
+| GET | `/api/auth/profile` | Get logged-in user profile |
 
-Registers a user.
+---
 
-Request body:
+## Claims
 
-```json
-{
-	"name": "John Doe",
-	"email": "john@example.com",
-	"password": "Password123!",
-	"role": "patient"
-}
-```
+| Method | Endpoint | Access |
+|---------|----------|--------|
+| POST | `/api/claims` | Patient |
+| GET | `/api/claims` | Patient |
+| GET | `/api/claims/:id` | Patient / Insurer |
+| PUT | `/api/claims/:id` | Insurer |
+| DELETE | `/api/claims/:id` | Patient (Optional) |
 
-Validation:
+---
 
-- `name` is required
-- `email` must be valid
-- `password` must be at least 8 characters
-- `role` must be `patient` or `insurer` when provided
+# Sample Login
 
-Response includes a JWT token and the created user.
-
-### POST /api/auth/login
-
-Logs a user in with email and password.
-
-Request body:
+## Patient
 
 ```json
 {
-	"email": "john@example.com",
-	"password": "Password123!"
+    "email": "patient@example.com",
+    "password": "Patient@123"
 }
 ```
 
-Response includes a JWT token and the authenticated user.
-
-### GET /api/auth/profile
-
-Returns the authenticated user profile.
-
-Header:
-
-```http
-Authorization: Bearer <token>
-```
-
-## Claims Model
-
-### User
-
-- name
-- email
-- password
-- role
-- createdAt
-- updatedAt
-
-### Claim
-
-- patient
-- name
-- email
-- claimAmount
-- description
-- documentUrl
-- status
-- approvedAmount
-- insurerComments
-- submittedAt
-- reviewedAt
-- createdAt
-- updatedAt
-
-Status values:
-
-- Pending
-- Approved
-- Rejected
-
-## Patient APIs
-
-All patient routes require a valid JWT for a user with the `patient` role.
-
-### POST /api/claims
-
-Submits a claim using `multipart/form-data`.
-
-Fields:
-
-- `name`
-- `email`
-- `claimAmount`
-- `description`
-- `document`
-
-Example form-data:
-
-```text
-name=John Doe
-email=john@example.com
-claimAmount=1500
-description=Medical reimbursement
-document=<file>
-```
-
-Behavior:
-
-- the uploaded document is stored in Cloudinary when configured
-- otherwise the file is saved locally under `backend/uploads/`
-- claim `status` defaults to `Pending`
-
-### GET /api/claims/my
-
-Returns the logged-in patient's claims, sorted by latest first.
-
-## Insurer APIs
-
-All insurer routes require a valid JWT for a user with the `insurer` role.
-
-### GET /api/claims
-
-Returns all claims with filtering and pagination.
-
-Supported query parameters:
-
-- `status`
-- `minAmount`
-- `maxAmount`
-- `date`
-- `search`
-- `patientName`
-- `page`
-- `limit`
-
-Example:
-
-```http
-GET /api/claims?status=Pending&minAmount=1000&maxAmount=5000&page=1&limit=10
-```
-
-### GET /api/claims/:id
-
-Returns full claim details by claim ID.
-
-### PUT /api/claims/:id
-
-Updates a claim.
-
-Request body:
+## Insurer
 
 ```json
 {
-	"status": "Approved",
-	"approvedAmount": 1200,
-	"insurerComments": "Approved after document verification"
+    "email": "insurer@example.com",
+    "password": "insurer@123"
 }
 ```
 
-Behavior:
+---
 
-- `reviewedAt` is automatically updated whenever a claim is reviewed
-- insurer-only access is enforced by middleware
+# File Upload
 
-## Middleware
+Claim documents are uploaded using **multipart/form-data**.
 
-- `authMiddleware` validates JWTs and attaches the authenticated user to `req.user`
-- `roleMiddleware` enforces role-based authorization
-- `uploadMiddleware` handles multipart claim document uploads
-- `validateRequest` centralizes express-validator error handling
-- `errorHandler` normalizes API errors and returns proper status codes
+Supported file formats
 
-## Error Handling
+- PDF
+- JPG
+- JPEG
+- PNG
 
-The backend returns structured JSON errors with appropriate HTTP status codes:
+Maximum file size
 
-- 400 Bad Request
-- 401 Unauthorized
-- 403 Forbidden
-- 404 Not Found
-- 500 Internal Server Error
-
-## Response Format
-
-Success responses use a consistent shape:
-
-```json
-{
-	"success": true,
-	"message": "...",
-	"data": {}
-}
+```
+10 MB
 ```
 
-## Health Check
+Uploaded documents are stored securely in **Cloudinary**.
 
-The API exposes a simple health endpoint:
+---
 
-```http
-GET /health
+# Running the Project
+
+Open two terminals.
+
+### Terminal 1
+
+```bash
+cd backend
+npm run dev
 ```
 
-## Example Workflow
+### Terminal 2
 
-1. Register a patient.
-2. Log in and copy the JWT token.
-3. Submit a claim with a document.
-4. Log in as an insurer.
-5. List claims, inspect a claim, and update its status.
+```bash
+cd client
+npm install
+npm run dev
+```
 
-## Notes
+Visit
 
-- Passwords are hashed with bcrypt before storage.
-- JWT payloads include `userId` and `role`.
-- Claim submission requires a file field named `document`.
-- Validation is applied to every implemented endpoint.
+```
+Frontend
+http://localhost:5173
+
+Backend
+http://localhost:8080
+```
+
+---
+
+# Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| PORT | Backend server port |
+| MONGO_URI | MongoDB Atlas connection string |
+| JWT_SECRET | Secret used to sign JWT |
+| JWT_EXPIRES_IN | JWT expiration time |
+| PUBLIC_BASE_URL | Backend base URL |
+| MAX_FILE_SIZE | Maximum upload size (bytes) |
+| CLOUDINARY_CLOUD_NAME | Cloudinary cloud name |
+| CLOUDINARY_API_KEY | Cloudinary API Key |
+| CLOUDINARY_API_SECRET | Cloudinary API Secret |
+| CLOUDINARY_FOLDER | Cloudinary folder for uploaded documents |
+
+---
+
+# Future Improvements
+
+- Email Notifications
+- Admin Dashboard
+- Claim History Timeline
+- Pagination
+- Search Functionality
+- Sorting & Advanced Filters
+- Unit Testing
+- Docker Support
+- Role-Based Access Control
+- Refresh Token Authentication
+
+---
+
+# Author
+
+**Kollepara Jaya Ratna Abhiram**
+
+GitHub: https://github.com/Abhi-7-github/ClaimCore
+
+---
+
+# Assignment
+
+This project was developed as part of the **3-Day Claims Management Platform Assignment**, implementing:
+
+- Patient claim submission portal
+- Insurer claim management portal
+- JWT Authentication
+- REST APIs
+- MongoDB Database
+- File Upload Support
+- Responsive React Frontend
+- Express.js Backend
