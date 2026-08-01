@@ -6,7 +6,13 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors());
+const clientOrigin = process.env.CLIENT_ORIGIN;
+
+app.use(
+  cors({
+    origin: clientOrigin,
+  })
+);
 app.use(express.json());
 
 // Routes

@@ -8,7 +8,9 @@ const ApiError = require('./utils/apiError');
 
 const app = express();
 
-app.use(cors());
+const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+
+app.use(cors({ origin: clientOrigin }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
