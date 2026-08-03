@@ -28,7 +28,7 @@ const getClaimById = asyncHandler(async (req, res) => {
 });
 
 const updateClaim = asyncHandler(async (req, res) => {
-  const claim = await claimService.updateClaim(req.params.id, req.body);
+  const claim = await claimService.updateClaim(req.params.id, req.body, req.user);
   return successResponse(res, 200, 'Claim updated successfully', claim);
 });
 

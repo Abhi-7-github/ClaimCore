@@ -84,6 +84,7 @@ const createClaim = async ({ user, payload, file }) => {
       documentUrl: uploadedDocument.documentUrl,
       status: 'Pending',
       submittedAt: new Date(),
+      submissionDate: new Date(),
     });
 
     return claim;
@@ -172,11 +173,45 @@ const getClaimById = async (id) => {
   return claim;
 };
 
-const updateClaim = async (id, payload) => {
+const updateClaim = async (id, payload, user = null) => {
   const claim = await Claim.findById(id);
 
   if (!claim) {
     throw new ApiError(404, 'Claim not found');
+  }
+
+  const isPatient = user?.role === 'patient';
+  const isInsurer = user?.role === 'insurer';
+
+  if (isPatient) {
+    if (claim.patient.toString() !== String(user.userId)) {
+      throw new ApiError(403, 'You are not allowed to update this claim');
+    }
+
+    if (claim.status !== 'Pending') {
+      throw new ApiError(400, 'Only pending claims can be edited');
+    }
+
+    const editableFields = ['name', 'email', 'claimAmount', 'description'];
+    const patientUpdates = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => editableFields.includes(key))
+    );
+
+    if (Object.keys(patientUpdates).length === 0) {
+      throw new ApiError(400, 'No valid updates provided');
+    }
+
+    Object.entries(patientUpdates).forEach(([key, value]) => {
+      claim[key] = key === 'claimAmount' ? Number(value) : value;
+    });
+
+    await claim.save();
+
+    return Claim.findById(claim._id).populate('patient', 'name email role');
+  }
+
+  if (!isInsurer) {
+    throw new ApiError(403, 'You are not allowed to update this claim');
   }
 
   if (payload.status !== undefined) {

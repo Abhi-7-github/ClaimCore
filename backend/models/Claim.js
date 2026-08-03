@@ -51,6 +51,10 @@ const claimSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    submissionDate: {
+      type: Date,
+      default: Date.now,
+    },
     reviewedAt: {
       type: Date,
       default: null,

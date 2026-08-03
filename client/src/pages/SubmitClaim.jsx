@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import Loader from '../components/Loader'
 import api from '../services/api'
+import { safeArray } from '../utils/constants'
 
 const initialForm = {
   name: '',
@@ -11,13 +13,56 @@ const initialForm = {
 }
 
 const SubmitClaim = () => {
+  const { id: claimId } = useParams()
   const [form, setForm] = useState(initialForm)
   const [documentFile, setDocumentFile] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingClaim, setLoadingClaim] = useState(Boolean(claimId))
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
+  const isEditMode = Boolean(claimId)
+
+  useEffect(() => {
+    if (!claimId) {
+      setForm(initialForm)
+      setDocumentFile(null)
+      return
+    }
+
+    const loadClaim = async () => {
+      try {
+        setError('')
+        setLoadingClaim(true)
+        const response = await api.get('/claims/my')
+        const foundClaim = safeArray(response.data?.data).find((item) => item._id === claimId || item.id === claimId)
+
+        if (!foundClaim) {
+          setError('Claim not found.')
+          return
+        }
+
+        if (foundClaim.status !== 'Pending') {
+          setError('Only pending claims can be edited.')
+          return
+        }
+
+        setForm({
+          name: foundClaim.name || '',
+          email: foundClaim.email || '',
+          claimAmount: foundClaim.claimAmount !== undefined ? String(foundClaim.claimAmount) : '',
+          description: foundClaim.description || '',
+        })
+      } catch (requestError) {
+        setError(requestError?.response?.data?.message || 'Unable to load the claim.')
+      } finally {
+        setLoadingClaim(false)
+      }
+    }
+
+    loadClaim()
+  }, [claimId])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -37,7 +82,7 @@ const SubmitClaim = () => {
       return 'All fields are required.'
     }
 
-    if (!documentFile) {
+    if (!isEditMode && !documentFile) {
       return 'Please upload a supporting document.'
     }
 
@@ -68,6 +113,19 @@ const SubmitClaim = () => {
     try {
       setLoading(true)
 
+      if (isEditMode) {
+        await api.put(`/claims/${claimId}`, {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          claimAmount: form.claimAmount,
+          description: form.description.trim(),
+        })
+
+        setSuccess('Claim updated successfully.')
+        navigate(`/patient/claims/${claimId}`)
+        return
+      }
+
       const formData = new FormData()
       formData.append('name', form.name)
       formData.append('email', form.email)
@@ -80,22 +138,26 @@ const SubmitClaim = () => {
       setSuccess('Claim submitted successfully.')
       resetForm()
     } catch (requestError) {
-      setError(requestError?.response?.data?.message || 'Unable to submit the claim.')
+      setError(requestError?.response?.data?.message || (isEditMode ? 'Unable to update the claim.' : 'Unable to submit the claim.'))
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loadingClaim && isEditMode) {
+    return <Loader label="Loading claim details..." />
   }
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Submit Claim</h1>
-          <p className="mt-1 text-sm text-gray-500">Provide the claim details and upload one document.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">{isEditMode ? 'Edit Claim' : 'Submit Claim'}</h1>
+          <p className="mt-1 text-sm text-gray-500">{isEditMode ? 'Update the pending claim details.' : 'Provide the claim details and upload one document.'}</p>
         </div>
 
-        <Link to="/patient" className="text-sm font-medium text-gray-700 hover:text-gray-900">
-          Back to dashboard
+        <Link to={isEditMode ? `/patient/claims/${claimId}` : '/patient'} className="text-sm font-medium text-gray-700 hover:text-gray-900">
+          {isEditMode ? 'Back to claim' : 'Back to dashboard'}
         </Link>
       </div>
 
@@ -161,18 +223,20 @@ const SubmitClaim = () => {
             />
           </div>
 
-          <div>
-            <label htmlFor="document" className="mb-1 block text-sm font-medium text-gray-700">
-              Upload Document
-            </label>
-            <input
-              id="document"
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
-            />
-          </div>
+          {!isEditMode ? (
+            <div>
+              <label htmlFor="document" className="mb-1 block text-sm font-medium text-gray-700">
+                Upload Document
+              </label>
+              <input
+                id="document"
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileChange}
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+              />
+            </div>
+          ) : null}
         </div>
 
         <div>
@@ -196,7 +260,7 @@ const SubmitClaim = () => {
             disabled={loading}
             className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? 'Submitting...' : 'Submit Claim'}
+            {loading ? (isEditMode ? 'Updating...' : 'Submitting...') : (isEditMode ? 'Update Claim' : 'Submit Claim')}
           </button>
 
           <button

@@ -68,9 +68,13 @@ router.get(
 router.put(
   '/:id',
   authMiddleware,
-  roleMiddleware('insurer'),
+  roleMiddleware('patient', 'insurer'),
   [
     param('id').isMongoId().withMessage('Valid claim id is required'),
+    body('name').optional().trim().notEmpty().withMessage('Name is required'),
+    body('email').optional().isEmail().withMessage('Valid email is required').normalizeEmail(),
+    body('claimAmount').optional().isFloat({ min: 0.01 }).withMessage('claimAmount must be greater than 0'),
+    body('description').optional().trim().notEmpty().withMessage('Description is required'),
     body('status')
       .optional()
       .isIn(['Pending', 'Approved', 'Rejected'])

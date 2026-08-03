@@ -15,16 +15,18 @@ A full-stack **Claims Management Platform** built with **React.js**, **Node.js (
 - Track Claim Status (Pending, Approved, Rejected)
 - View Approved Amount (if approved)
 - View Insurer Comments
+- Edit Pending Claims from the Claim Details Page
 
 ### Insurer Portal
 
 - Secure Login
 - View All Claims
-- Filter Claims by Status
+- Filter Claims by Status, Date, and Amount
 - View Uploaded Documents
 - Approve or Reject Claims
 - Add Approved Amount
 - Leave Comments for Patients
+- Review and Manage Claims from a Dedicated Review Panel
 
 ---
 
@@ -216,10 +218,17 @@ Authorization: Bearer YOUR_JWT_TOKEN
 | Method | Endpoint | Access |
 |---------|----------|--------|
 | POST | `/api/claims` | Patient |
-| GET | `/api/claims` | Patient |
+| GET | `/api/claims/my` | Patient |
+| GET | `/api/claims` | Insurer |
 | GET | `/api/claims/:id` | Patient / Insurer |
-| PUT | `/api/claims/:id` | Insurer |
+| PUT | `/api/claims/:id` | Patient (pending claims only) / Insurer |
 | DELETE | `/api/claims/:id` | Patient (Optional) |
+
+### Recent Updates
+
+- Patients can now edit their pending claims directly from the claim details page.
+- Claim updates support changes to claim details such as name, email, claim amount, and description for pending claims.
+- Insurers can still review and approve/reject claims, add approved amounts, and leave comments.
 
 ---
 
