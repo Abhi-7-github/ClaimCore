@@ -9,6 +9,39 @@ import {
   getStatusMeta,
 } from '../utils/constants'
 
+/* ─── Icons ─────────────────────────────────────────────────── */
+const IconBack = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+  </svg>
+)
+const IconCheck = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
+const IconX = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+)
+const IconDoc = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+  </svg>
+)
+
+/* ─── Detail item ────────────────────────────────────────────── */
+const ReviewItem = ({ label, value }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+    <p style={{ fontSize: '11px', fontWeight: '700', color: '#3d7a62', textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
+      {label}
+    </p>
+    <div style={{ fontSize: '14px', color: '#0d2e22', fontWeight: '500' }}>{value ?? '-'}</div>
+  </div>
+)
+
+/* ─── Component ─────────────────────────────────────────────── */
 const ReviewClaim = () => {
   const { id } = useParams()
   const [claim, setClaim] = useState(null)
@@ -25,57 +58,43 @@ const ReviewClaim = () => {
         setLoading(true)
         const response = await api.get(`/claims/${id}`)
         const claimData = response.data?.data
-
         setClaim(claimData)
         setApprovedAmount(claimData?.approvedAmount !== undefined ? String(claimData.approvedAmount) : '')
         setComments(claimData?.insurerComments || '')
-      } catch (requestError) {
-        setError(requestError?.response?.data?.message || 'Unable to load the claim.')
-      } finally {
-        setLoading(false)
-      }
+      } catch (e) {
+        setError(e?.response?.data?.message || 'Unable to load the claim.')
+      } finally { setLoading(false) }
     }
-
     loadClaim()
   }, [id])
 
   const submitReview = async (status) => {
     try {
-      setSaving(true)
-      setError('')
-      setMessage('')
-
+      setSaving(true); setError(''); setMessage('')
       const fallbackAmount = status === 'Rejected' ? 0 : Number(claim?.claimAmount || 0)
       const payload = {
         status,
         approvedAmount: approvedAmount === '' ? fallbackAmount : Number(approvedAmount),
         insurerComments: comments,
       }
-
       const response = await api.put(`/claims/${id}`, payload)
       setClaim(response.data?.data)
       setMessage(`Claim ${status.toLowerCase()} successfully.`)
-    } catch (requestError) {
-      setError(requestError?.response?.data?.message || 'Unable to update the claim.')
-    } finally {
-      setSaving(false)
-    }
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Unable to update the claim.')
+    } finally { setSaving(false) }
   }
 
-  if (loading) {
-    return <Loader label="Loading claim review..." />
-  }
+  if (loading) return <Loader label="Loading claim review..." />
 
   if (error && !claim) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm text-red-700">{error}</p>
-          <Link
-            to="/insurer"
-            className="mt-4 inline-flex rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Back
+      <div style={{ maxWidth: '900px', margin: '40px auto', padding: '0 24px' }}>
+        <div style={{ background: '#fff', border: '1px solid #d4e8e0', borderRadius: '14px', padding: '32px', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <p style={{ color: '#991b1b', fontSize: '14px', margin: '0 0 16px' }}>{error}</p>
+          <Link to="/insurer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '9px 18px', borderRadius: '7px', border: '1px solid #b0dfd0', background: '#fff', color: '#1a7a5e', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>
+            <IconBack /> Back to Dashboard
           </Link>
         </div>
       </div>
@@ -85,112 +104,145 @@ const ReviewClaim = () => {
   const statusMeta = getStatusMeta(claim?.status)
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Review Claim</h1>
-          <p className="mt-1 text-sm text-gray-500">Approve or reject the submitted claim.</p>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        .rc-back:hover    { background:#f0faf6!important; border-color:#2aa882!important; }
+        .rc-approve:hover { background:#15803d!important; }
+        .rc-reject:hover  { background:#b91c1c!important; }
+        .rc-input:focus, .rc-textarea:focus {
+          border-color:#2aa882!important; box-shadow:0 0 0 3px rgba(42,168,130,0.12)!important; outline:none;
+        }
+        .rc-doc-link:hover { color:#1a7a5e!important; }
+      `}</style>
+
+      <div style={{ fontFamily: "'Inter','Segoe UI',sans-serif", background: '#f5f7f6', minHeight: '100vh' }}>
+
+        {/* Banner */}
+        <div style={{ background: 'linear-gradient(125deg,#155e47 0%,#1e8f6e 50%,#52c4a0 100%)', padding: '28px 44px 24px' }}>
+          <p style={{ fontSize: '11px', fontWeight: '600', color: '#90dfc4', letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 8px' }}>
+            ClaimCore &nbsp;/&nbsp; Insurer Portal &nbsp;/&nbsp; Review Claim
+          </p>
+          <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: 0 }}>Review Claim</h1>
+          <p style={{ color: '#b8ecdd', fontSize: '13px', margin: '6px 0 0' }}>Approve or reject the submitted claim after review.</p>
         </div>
 
-        <Link to="/insurer" className="text-sm font-medium text-gray-700 hover:text-gray-900">
-          Back
-        </Link>
-      </div>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '28px 28px 48px' }}>
 
-      {error ? (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
+          {/* Back */}
+          <div style={{ marginBottom: '20px' }}>
+            <Link to="/insurer" className="rc-back"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '9px 18px', borderRadius: '7px', border: '1px solid #b0dfd0', background: '#fff', color: '#1a7a5e', fontSize: '13px', fontWeight: '600', textDecoration: 'none', transition: 'all 0.18s' }}>
+              <IconBack /> Back to Dashboard
+            </Link>
+          </div>
 
-      {message ? (
-        <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {message}
-        </div>
-      ) : null}
+          {/* Error / Success banners */}
+          {error && (
+            <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', color: '#991b1b', fontSize: '13px', fontWeight: '500' }}>
+              {error}
+            </div>
+          )}
+          {message && (
+            <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#f0faf5', border: '1px solid #86efad', borderRadius: '8px', color: '#15803d', fontSize: '13px', fontWeight: '500' }}>
+              {message}
+            </div>
+          )}
 
-      <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-2">
-          <ReviewItem label="Name" value={claim?.name} />
-          <ReviewItem label="Email" value={claim?.email} />
-          <ReviewItem label="Amount" value={formatCurrency(claim?.claimAmount)} />
-          <ReviewItem
-            label="Status"
-            value={
-              <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusMeta.tone}`}>
+          {/* Main card */}
+          <div style={{ background: '#fff', border: '1px solid #d4e8e0', borderRadius: '14px', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+
+            {/* Card header */}
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #dff0e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f7fbf9' }}>
+              <div>
+                <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#0d2e22', margin: 0 }}>Claim Information</h2>
+                <p style={{ fontSize: '12px', color: '#6b9e8c', margin: '2px 0 0' }}>ID: <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>{id}</span></p>
+              </div>
+              <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${statusMeta.tone}`}>
                 {statusMeta.label}
               </span>
-            }
-          />
-          <ReviewItem label="Submitted Date" value={formatDate(claim?.submittedAt)} />
-          <ReviewItem label="Approved Amount" value={formatCurrency(claim?.approvedAmount)} />
-        </div>
+            </div>
 
-        <ReviewItem label="Description" value={<p className="whitespace-pre-line text-gray-700">{claim?.description}</p>} />
-        <ReviewItem label="Uploaded Document" value={claim?.documentUrl ? <a href={claim.documentUrl} target="_blank" rel="noreferrer" className="font-medium text-gray-900 underline underline-offset-2">View Document</a> : '-'} />
+            <div style={{ padding: '24px' }}>
+              {/* Detail grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '24px', marginBottom: '24px' }}>
+                <ReviewItem label="Patient Name" value={claim?.name} />
+                <ReviewItem label="Email" value={claim?.email} />
+                <ReviewItem label="Claim Amount" value={formatCurrency(claim?.claimAmount)} />
+                <ReviewItem label="Approved Amount" value={formatCurrency(claim?.approvedAmount)} />
+                <ReviewItem label="Submitted Date" value={formatDate(claim?.submittedAt)} />
+                <ReviewItem label="Current Status" value={
+                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusMeta.tone}`}>
+                    {statusMeta.label}
+                  </span>
+                } />
+              </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="approvedAmount" className="mb-1 block text-sm font-medium text-gray-700">
-              Approved Amount
-            </label>
-            <input
-              id="approvedAmount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={approvedAmount}
-              onChange={(event) => setApprovedAmount(event.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-              placeholder="0"
-            />
+              <div style={{ borderTop: '1px solid #dff0e8', margin: '0 0 24px' }} />
+
+              {/* Description */}
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ fontSize: '11px', fontWeight: '700', color: '#3d7a62', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 8px' }}>Description</p>
+                <p style={{ fontSize: '14px', color: '#0d2e22', whiteSpace: 'pre-line', lineHeight: 1.7, margin: 0 }}>{claim?.description || '-'}</p>
+              </div>
+
+              {/* Document */}
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ fontSize: '11px', fontWeight: '700', color: '#3d7a62', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 8px' }}>Supporting Document</p>
+                {claim?.documentUrl ? (
+                  <a href={claim.documentUrl} target="_blank" rel="noreferrer" className="rc-doc-link"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '13px', fontWeight: '600', color: '#1e8f6e', textDecoration: 'none', padding: '8px 14px', border: '1px solid #b0dfd0', borderRadius: '7px', background: '#f0faf6', transition: 'color 0.18s' }}>
+                    <IconDoc /> View Document
+                  </a>
+                ) : (
+                  <p style={{ fontSize: '14px', color: '#8ab4a4', fontStyle: 'italic', margin: 0 }}>No document uploaded.</p>
+                )}
+              </div>
+
+              <div style={{ borderTop: '1px solid #dff0e8', margin: '0 0 24px' }} />
+
+              {/* Review inputs */}
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#0d2e22', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '11px', color: '#3d7a62' }}>
+                Review Decision
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px,1fr))', gap: '16px', marginBottom: '24px' }}>
+                <div>
+                  <label htmlFor="approvedAmount" style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#3d7a62', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>
+                    Approved Amount (₹)
+                  </label>
+                  <input id="approvedAmount" type="number" min="0" step="0.01"
+                    value={approvedAmount} onChange={(e) => setApprovedAmount(e.target.value)}
+                    placeholder="0.00" className="rc-input"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '7px', border: '1px solid #c0ddd4', fontSize: '14px', color: '#0d2e22', background: '#fafcfb', boxSizing: 'border-box' }} />
+                </div>
+
+                <div>
+                  <label htmlFor="comments" style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#3d7a62', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>
+                    Insurer Comments
+                  </label>
+                  <textarea id="comments" rows="4"
+                    value={comments} onChange={(e) => setComments(e.target.value)}
+                    placeholder="Enter your review comments…" className="rc-textarea"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '7px', border: '1px solid #c0ddd4', fontSize: '14px', color: '#0d2e22', background: '#fafcfb', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button type="button" disabled={saving} onClick={() => submitReview('Approved')} className="rc-approve"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 22px', borderRadius: '8px', border: 'none', background: '#16a34a', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.18s', opacity: saving ? 0.65 : 1 }}>
+                  <IconCheck /> {saving ? 'Saving…' : 'Approve Claim'}
+                </button>
+                <button type="button" disabled={saving} onClick={() => submitReview('Rejected')} className="rc-reject"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 22px', borderRadius: '8px', border: 'none', background: '#dc2626', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.18s', opacity: saving ? 0.65 : 1 }}>
+                  <IconX /> {saving ? 'Saving…' : 'Reject Claim'}
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div>
-            <label htmlFor="comments" className="mb-1 block text-sm font-medium text-gray-700">
-              Comments
-            </label>
-            <textarea
-              id="comments"
-              rows="4"
-              value={comments}
-              onChange={(event) => setComments(event.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-              placeholder="Enter review comments"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => submitReview('Approved')}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {saving ? 'Saving...' : 'Approve'}
-          </button>
-
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => submitReview('Rejected')}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {saving ? 'Saving...' : 'Reject'}
-          </button>
         </div>
       </div>
-    </div>
-  )
-}
-
-const ReviewItem = ({ label, value }) => {
-  return (
-    <div>
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <div className="mt-1 text-sm text-gray-900">{value}</div>
-    </div>
+    </>
   )
 }
 
