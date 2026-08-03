@@ -34,5 +34,7 @@ router.post(
 );
 
 router.get('/profile', authMiddleware, authController.profile);
+router.put('/profile', authMiddleware, authController.updateProfile);
+router.put('/profile', authMiddleware, authController.updateProfile);
 
 module.exports = router;

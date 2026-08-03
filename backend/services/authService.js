@@ -78,8 +78,37 @@ const getProfile = async (userId) => {
   };
 };
 
+const updateProfile = async (userId, payload) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  if (payload.name !== undefined) {
+    user.name = payload.name.trim();
+  }
+
+  if (payload.email !== undefined) {
+    const existingUser = await User.findOne({ email: payload.email, _id: { $ne: userId } });
+
+    if (existingUser) {
+      throw new ApiError(400, 'Email is already in use');
+    }
+
+    user.email = payload.email.toLowerCase().trim();
+  }
+
+  await user.save();
+
+  return {
+    user: sanitizeUser(user),
+  };
+};
+
 module.exports = {
   register,
   login,
   getProfile,
+  updateProfile,
 };

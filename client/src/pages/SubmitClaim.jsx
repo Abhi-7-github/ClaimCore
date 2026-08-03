@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import Loader from '../components/Loader'
+import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { safeArray } from '../utils/constants'
 
@@ -20,13 +21,23 @@ const SubmitClaim = () => {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingClaim, setLoadingClaim] = useState(Boolean(claimId))
+  const [useProfileDetails, setUseProfileDetails] = useState(true)
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
   const isEditMode = Boolean(claimId)
+  const { user } = useAuth()
 
   useEffect(() => {
     if (!claimId) {
-      setForm(initialForm)
+      if (user && useProfileDetails) {
+        setForm((currentForm) => ({
+          ...currentForm,
+          name: user.name || '',
+          email: user.email || '',
+        }))
+      } else {
+        setForm(initialForm)
+      }
       setDocumentFile(null)
       return
     }
@@ -62,7 +73,7 @@ const SubmitClaim = () => {
     }
 
     loadClaim()
-  }, [claimId])
+  }, [claimId, user, useProfileDetails])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -171,6 +182,20 @@ const SubmitClaim = () => {
         {success ? (
           <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {success}
+          </div>
+        ) : null}
+
+        {!isEditMode ? (
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={useProfileDetails}
+                onChange={(event) => setUseProfileDetails(event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Use my profile details for this claim
+            </label>
           </div>
         ) : null}
 
