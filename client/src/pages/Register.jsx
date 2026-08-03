@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import api from '../services/api'
 import { ROLE_HOME_PATH } from '../utils/constants'
 import { useAuth } from '../context/AuthContext'
 
 const initialForm = {
+  name: '',
   email: '',
   password: '',
+  role: 'patient',
 }
 
-const Login = () => {
+const Register = () => {
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,8 +36,8 @@ const Login = () => {
   }
 
   const validate = () => {
-    if (!form.email.trim() || !form.password.trim()) {
-      return 'Email and password are required.'
+    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
+      return 'Name, email and password are required.'
     }
 
     return ''
@@ -55,7 +57,7 @@ const Login = () => {
     try {
       setLoading(true)
 
-      const response = await api.post('/auth/login', form)
+      const response = await api.post('/auth/register', form)
       const payload = response.data?.data
 
       login({
@@ -64,11 +66,9 @@ const Login = () => {
         user: payload?.user,
       })
 
-      const destination = ROLE_HOME_PATH[payload?.user?.role] || '/patient'
-
-      navigate(destination, { replace: true })
+      navigate(ROLE_HOME_PATH[payload?.user?.role] || '/patient', { replace: true })
     } catch (requestError) {
-      const message = requestError?.response?.data?.message || 'Unable to sign in. Please try again.'
+      const message = requestError?.response?.data?.message || 'Unable to create account. Please try again.'
       setError(message)
     } finally {
       setLoading(false)
@@ -80,7 +80,7 @@ const Login = () => {
       <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-gray-900">ClaimCore</h1>
-          <p className="mt-2 text-sm text-gray-500">Access the ClaimCore platform.</p>
+          <p className="mt-2 text-sm text-gray-500">Create your ClaimCore account.</p>
         </div>
 
         {error ? (
@@ -90,6 +90,22 @@ const Login = () => {
         ) : null}
 
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+          <div>
+            <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
+              Full name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+              placeholder="Jane Doe"
+              autoComplete="name"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
               Email
@@ -117,9 +133,25 @@ const Login = () => {
               value={form.password}
               onChange={handleChange}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
-              placeholder="Enter password"
-              autoComplete="current-password"
+              placeholder="Create a password"
+              autoComplete="new-password"
             />
+          </div>
+
+          <div>
+            <label htmlFor="role" className="mb-1 block text-sm font-medium text-gray-700">
+              Account type
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+            >
+              <option value="patient">Patient</option>
+              <option value="insurer">Insurer</option>
+            </select>
           </div>
 
           <button
@@ -127,23 +159,22 @@ const Login = () => {
             disabled={loading}
             className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Creating account...' : 'Sign up'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don’t have an account?{' '}
-          <button
-            type="button"
-            onClick={() => navigate('/register')}
+          Already have an account?{' '}
+          <Link
+            to="/login"
             className="font-medium text-gray-900 underline decoration-gray-400 underline-offset-4 hover:decoration-gray-900"
           >
-            Sign up
-          </button>
+            Sign in
+          </Link>
         </p>
       </div>
     </div>
   )
 }
 
-export default Login
+export default Register

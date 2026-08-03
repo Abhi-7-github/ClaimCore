@@ -7,6 +7,7 @@ import InsurerDashboard from './pages/InsurerDashboard'
 import Login from './pages/Login'
 import NotFound from './pages/NotFound'
 import PatientDashboard from './pages/PatientDashboard'
+import Register from './pages/Register'
 import ReviewClaim from './pages/ReviewClaim'
 import SubmitClaim from './pages/SubmitClaim'
 
@@ -26,6 +27,7 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       <Route element={<ProtectedRoute allowedRoles={['patient']} />}>
         <Route element={<ProtectedLayout />}>
